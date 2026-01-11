@@ -52,5 +52,16 @@ namespace GoldenCrown.Controllers
             }
             return BadRequest(new { Message = transferResult.ErrorMessage });
         }
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetTransactionHistoryAsync(TransactionHistoryRequest request)
+        {
+            var historyResult = await _financeService.GetTransactionHistoryAsync(request.Token, request.From, request.To, request.Offset, request.Limit);
+            if (historyResult.IsSuccess)
+            {
+                return Ok(historyResult.Value);
+            }
+            return BadRequest(new { Message = historyResult.ErrorMessage });
+        }
     }
 }
