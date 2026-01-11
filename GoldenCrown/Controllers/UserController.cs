@@ -18,12 +18,17 @@ namespace GoldenCrown.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-           var result = await _userService.RegisterAsync(request.Login, request.Name, request.Password);
-           if (result)
-           {
-               return Ok();
-           }
-           return BadRequest(new { Message = "User registration failed" });
+            if(ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _userService.RegisterAsync(request.Login, request.Name, request.Password);
+            if (result)
+            {
+                return Ok();
+            }
+            return BadRequest(new { Message = "User registration failed" });
         }
     }
 }
