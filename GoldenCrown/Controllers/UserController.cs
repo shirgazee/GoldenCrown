@@ -1,4 +1,4 @@
-﻿using GoldenCrown.Dtos;
+﻿using GoldenCrown.Dtos.User;
 using GoldenCrown.Services;
 using Microsoft.AspNetCore.Mvc;
 
