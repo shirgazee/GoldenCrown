@@ -15,28 +15,16 @@ namespace GoldenCrown.Services
             _dbContext = dbContext;
         }
 
-        public async Task<Result<decimal>> GetBalanceAsync(string token)
+        public async Task<Result<decimal>> GetBalanceAsync(int userId)
         {
-            var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-            if (session == null)
-            {
-                return Result<decimal>.Failure("Пользователь не авторизован");
-            }
-
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == user!.Id);
             return Result<decimal>.Success(account!.Balance);
         }
 
-        public async Task<Result> DepositAsync(string token, decimal amount)
+        public async Task<Result> DepositAsync(int userId, decimal amount)
         {
-            var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-            if (session == null)
-            {
-                return Result.Failure("Пользователь не авторизован");
-            }
-
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == user!.Id);
 
             account!.Balance += amount;
@@ -44,15 +32,9 @@ namespace GoldenCrown.Services
             return Result.Success();
         }
 
-        public async Task<Result> TransferAsync(string fromToken, string toLogin, decimal amount)
+        public async Task<Result> TransferAsync(int fromUserId, string toLogin, decimal amount)
         {
-            var fromSession = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == fromToken);
-            if (fromSession == null)
-            {
-                return Result.Failure("Пользователь не авторизован");
-            }
-
-            var fromUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == fromSession.UserId);
+            var fromUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == fromUserId);
             var fromAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == fromUser!.Id);
             var toUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Login == toLogin);
             if (toUser == null)
@@ -80,20 +62,14 @@ namespace GoldenCrown.Services
             return Result.Success();
         }
 
-        public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(string token, DateTime? dateFrom, DateTime? dateTo, int skip, int take)
+        public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(int userId, DateTime? dateFrom, DateTime? dateTo, int skip, int take)
         {
             if(dateFrom != null && dateTo != null && dateFrom > dateTo)
             {
                 return Result<List<TransactionHistoryResponse>>.Failure("Некорректный диапазон дат");
             }
 
-            var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-            if (session == null)
-            {
-                return Result<List<TransactionHistoryResponse>>.Failure("Пользователь не авторизован");
-            }
-
-            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == session.UserId);
+            var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
 
             var transactions = _dbContext.Transactions.Where(x => x.SenderAccountId == account!.Id || x.ReceiverAccountId == account.Id);

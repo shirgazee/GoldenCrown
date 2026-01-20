@@ -6,10 +6,6 @@ namespace GoldenCrown.Dtos.Finance
 {
     public class TransactionHistoryRequest
     {
-        [FromQuery]
-        [Required(ErrorMessage = "Поле token обязательно")]
-        public string Token { get; set; }
-
         public DateTime? From { get; set; }
 
         public DateTime? To { get; set; }
