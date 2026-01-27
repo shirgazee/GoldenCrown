@@ -1,4 +1,5 @@
 
+using GoldenCrown.BackgroundServices;
 using GoldenCrown.Database;
 using GoldenCrown.Middlewares;
 using GoldenCrown.Services;
@@ -22,6 +23,8 @@ namespace GoldenCrown
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IFinanceService, FinanceService>();
+
+            builder.Services.AddHostedService<SessionCleanupService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
