@@ -4,7 +4,6 @@ using GoldenCrown.BackgroundServices;
 using GoldenCrown.Database;
 using GoldenCrown.Dtos.User;
 using GoldenCrown.Middlewares;
-using GoldenCrown.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -23,9 +22,12 @@ namespace GoldenCrown
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IFinanceService, FinanceService>();
+
+            builder.Services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+            });
+
 
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequest>();
 
@@ -76,7 +78,7 @@ namespace GoldenCrown
             app.MapControllers();
 
             MigrateDatabase(app);
-            
+
             app.Run();
         }
 

@@ -1,46 +1,22 @@
 ﻿using GoldenCrown.Database;
 using GoldenCrown.Models;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoldenCrown.Services
+namespace GoldenCrown.Features.User.UserLogin
 {
-    public class UserService : IUserService
+    public class UserLoginCommandHandler : IRequestHandler<UserLoginCommand, Result<string>>
     {
         private readonly ApplicationDbContext _context;
-        private readonly IAccountService _accountService;
 
-        public UserService(ApplicationDbContext context, IAccountService accountService)
+        public UserLoginCommandHandler(ApplicationDbContext context)
         {
             _context = context;
-            _accountService = accountService;
         }
 
-        public async Task<Result> RegisterAsync(string login, string name, string password)
+        public async Task<Result<string>> Handle(UserLoginCommand request, CancellationToken cancellationToken)
         {
-            var existing = await _context.Users.FirstOrDefaultAsync(x => x.Login == login);
-            if (existing != null)
-            {
-                return Result.Failure("User already exists.");
-            }
-
-            var user = new User
-            {
-                Login = login,
-                Name = name,
-                Password = password
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            await _accountService.CreateAccountAsync(login);
-
-            return Result.Success();
-        }
-
-        public async Task<Result<string>> LoginAsync(string login, string password)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Login == login && x.Password == password);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Login == request.Login && x.Password == request.Password);
             if (user == null)
             {
                 return Result<string>.Failure("Invalid login or password.");
@@ -70,4 +46,3 @@ namespace GoldenCrown.Services
         }
     }
 }
-

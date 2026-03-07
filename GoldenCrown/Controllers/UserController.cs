@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
 using GoldenCrown.Dtos.User;
-using GoldenCrown.Services;
+using GoldenCrown.Features.User.UserLogin;
+using GoldenCrown.Features.User.UserRegister;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GoldenCrown.Controllers
@@ -9,11 +11,11 @@ namespace GoldenCrown.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IMediator _mediator;
 
-        public UserController(IUserService userService)
+        public UserController(IMediator mediator)
         {
-            _userService = userService;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]
@@ -25,12 +27,13 @@ namespace GoldenCrown.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var result = await _userService.RegisterAsync(request.Login, request.Name, request.Password);
-            if (result)
+            var command = new UserRegisterCommand(request.Login, request.Name, request.Password);
+            var result = await _mediator.Send(command);
+            if (result.IsSuccess)
             {
                 return Ok();
             }
-            return BadRequest(new { Message = "User registration failed" });
+            return BadRequest(new { Message = result.ErrorMessage });
         }
 
         [HttpPost("login")]
@@ -41,8 +44,11 @@ namespace GoldenCrown.Controllers
             {
                 return BadRequest(validationResult.ToDictionary());
             }
-            var result = await _userService.LoginAsync(request.Login, request.Password);
-            if (result)
+
+            var command = new UserLoginCommand(request.Login, request.Password);
+            var result = await _mediator.Send(command);
+
+            if (result.IsSuccess)
             {
                 return Ok(new { Token = result.Value });
             }
