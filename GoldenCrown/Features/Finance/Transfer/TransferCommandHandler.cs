@@ -16,13 +16,21 @@ namespace GoldenCrown.Features.Finance.Transfer
 
         public async Task<Result> Handle(TransferCommand request, CancellationToken cancellationToken)
         {
-            var fromAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == request.FromUserId, cancellationToken);
+            var fromAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == request.FromUserId && a.Currency == request.Currency, cancellationToken);
+            if (fromAccount == null)
+            {
+                return Result.Failure("Счет отправителя не найден");
+            }
             var toUser = await _context.Users.FirstOrDefaultAsync(u => u.Login == request.ToLogin, cancellationToken);
             if (toUser == null)
             {
                 return Result.Failure("Получатель не найден");
             }
-            var toAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == toUser.Id, cancellationToken);
+            var toAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == toUser.Id && a.Currency == request.Currency, cancellationToken);
+            if (toAccount == null)
+            {
+                return Result.Failure("Счет получателя не найден");
+            }
             if (fromAccount!.Balance < request.Amount)
             {
                 return Result.Failure("Недостаточно средств");
@@ -35,7 +43,8 @@ namespace GoldenCrown.Features.Finance.Transfer
                 ReceiverAccountId = toAccount.Id,
                 SenderAccountId = fromAccount.Id,
                 Amount = request.Amount,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Currency =  request.Currency
             };
             _context.Transactions.Add(transaction);
 
