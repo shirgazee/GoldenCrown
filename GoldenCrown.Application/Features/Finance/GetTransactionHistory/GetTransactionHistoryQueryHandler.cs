@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GoldenCrown.Application.Features.Finance.GetTransactionHistory
 {
-    public class GetTransactionHistoryQueryHandler : IRequestHandler<GetTransactionHistoryQuery, Result<List<TransactionHistoryResponse>>>
+    public class GetTransactionHistoryQueryHandler : IRequestHandler<GetTransactionHistoryQuery, Result<List<TransactionHistoryDto>>>
     {
         private readonly ApplicationDbContext _context;
 
@@ -14,11 +14,11 @@ namespace GoldenCrown.Application.Features.Finance.GetTransactionHistory
             _context = context;
         }
 
-        public async Task<Result<List<TransactionHistoryResponse>>> Handle(GetTransactionHistoryQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<TransactionHistoryDto>>> Handle(GetTransactionHistoryQuery request, CancellationToken cancellationToken)
         {
             if (request.DateFrom != null && request.DateTo != null && request.DateFrom > request.DateTo)
             {
-                return Result<List<TransactionHistoryResponse>>.Failure("Некорректный диапазон дат");
+                return Result<List<TransactionHistoryDto>>.Failure("Некорректный диапазон дат");
             }
 
             var userAccountIds = await _context.Accounts
@@ -57,7 +57,7 @@ namespace GoldenCrown.Application.Features.Finance.GetTransactionHistory
                     })
                 .ToDictionaryAsync(x => x.AccId, cancellationToken);
 
-            var result = dbTransactions.Select(t => new TransactionHistoryResponse
+            var result = dbTransactions.Select(t => new TransactionHistoryDto
             {
                 SenderName = names[t.SenderAccountId].Name,
                 ReceiverName = names[t.ReceiverAccountId].Name,
@@ -66,7 +66,7 @@ namespace GoldenCrown.Application.Features.Finance.GetTransactionHistory
                 Currency = t.Currency,
             }).ToList();
 
-            return Result<List<TransactionHistoryResponse>>.Success(result);
+            return Result<List<TransactionHistoryDto>>.Success(result);
         }
     }
 }

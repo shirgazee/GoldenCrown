@@ -1,4 +1,4 @@
-namespace GoldenCrown.Application.Dtos.Finance
+namespace GoldenCrown.Api.Dtos.Finance
 {
     public class BalanceResponse
     {

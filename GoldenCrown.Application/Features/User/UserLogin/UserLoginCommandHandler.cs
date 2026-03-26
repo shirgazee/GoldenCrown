@@ -34,12 +34,12 @@ namespace GoldenCrown.Application.Features.User.UserLogin
             {
                 existingSession.Token = session.Token;
                 existingSession.ExpiresAt = session.ExpiresAt;
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
             else
             {
                 _context.Sessions.Add(session);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             return Result<string>.Success(session.Token);

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace GoldenCrown.Application.Features.Finance.GetTransactionHistory
 {
-    public class GetTransactionHistoryQuery : IRequest<Result<List<TransactionHistoryResponse>>>
+    public class GetTransactionHistoryQuery : IRequest<Result<List<TransactionHistoryDto>>>
     {
         public int UserId { get; set; }
         public DateTime? DateFrom { get; set; }
