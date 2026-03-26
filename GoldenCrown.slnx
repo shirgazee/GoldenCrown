@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="GoldenCrown/GoldenCrown.csproj" />
+  <Project Path="GoldenCrown.Application/GoldenCrown.Application.csproj" Id="96007276-98b2-4c46-bb31-bea4c2dbf80b" />
+  <Project Path="GoldenCrown.Domain/GoldenCrown.Domain.csproj" Id="06640e37-bfaa-45ad-a625-e8cf705dccbf" />
+  <Project Path="GoldenCrown.Infrastructure/GoldenCrown.Infrastructure.csproj" Id="71ff959a-f1ed-45cf-af09-5007a7116f51" />
+  <Project Path="GoldenCrown/GoldenCrown.API.csproj" />
 </Solution>

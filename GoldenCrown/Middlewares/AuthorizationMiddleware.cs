@@ -1,8 +1,8 @@
-﻿using GoldenCrown.Attributes;
+﻿using GoldenCrown.API.Attributes;
 using GoldenCrown.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoldenCrown.Middlewares
+namespace GoldenCrown.API.Middlewares
 {
     public class AuthorizationMiddleware
     {

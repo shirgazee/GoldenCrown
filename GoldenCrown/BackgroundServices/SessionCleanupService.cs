@@ -1,7 +1,7 @@
 using GoldenCrown.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace GoldenCrown.BackgroundServices
+namespace GoldenCrown.API.BackgroundServices
 {
     public class SessionCleanupService : BackgroundService
     {

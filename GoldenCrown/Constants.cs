@@ -1,4 +1,4 @@
-﻿namespace GoldenCrown
+﻿namespace GoldenCrown.API
 {
     public static class Constants
     {

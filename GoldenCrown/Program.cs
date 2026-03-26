@@ -1,14 +1,13 @@
-
 using FluentValidation;
-using GoldenCrown.BackgroundServices;
+using GoldenCrown.API.BackgroundServices;
+using GoldenCrown.API.Dtos;
+using GoldenCrown.API.Middlewares;
+using GoldenCrown.Application.Dtos.User;
 using GoldenCrown.Database;
-using GoldenCrown.Dtos.User;
-using GoldenCrown.Middlewares;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
-namespace GoldenCrown
+namespace GoldenCrown.API
 {
     public class Program
     {
