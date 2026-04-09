@@ -3,4 +3,5 @@
   <Project Path="GoldenCrown.Domain/GoldenCrown.Domain.csproj" Id="06640e37-bfaa-45ad-a625-e8cf705dccbf" />
   <Project Path="GoldenCrown.Infrastructure/GoldenCrown.Infrastructure.csproj" Id="71ff959a-f1ed-45cf-af09-5007a7116f51" />
   <Project Path="GoldenCrown.Api/GoldenCrown.Api.csproj" />
+  <Project Path="GoldenCrown.TaxInspectionConsole/GoldenCrown.TaxInspectionConsole.csproj" />
 </Solution>

@@ -8,8 +8,13 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=mssql;Database=GoldenCrown;User Id=sa;Password=MsSql_Pass123!;TrustServerCertificate=True
+      - RabbitMQ__Hostname=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       mssql:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   mssql:
@@ -38,7 +43,39 @@ services:
       - "5432:5432"
     volumes:
       - pg_goldencrown_data:/var/lib/postgresql/data
+  
+  rabbitmq:
+    image: rabbitmq:3.12.3-management
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 1s
+
+  tax-inspection-console:
+    build:
+      context: ./
+      dockerfile: GoldenCrown.TaxInspectionConsole/Dockerfile
+    environment:
+      - RabbitMQ__Hostname=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   mssql_goldencrown_data:
   pg_goldencrown_data:
+  rabbitmq_data:

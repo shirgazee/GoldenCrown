@@ -1,5 +1,7 @@
+using GoldenCrown.Application.Events;
 using GoldenCrown.Database;
 using GoldenCrown.Domain.Models;
+using GoldenCrown.Infrastructure.RabbitMQ;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +10,12 @@ namespace GoldenCrown.Application.Features.Finance.Transfer
     public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMessageProducer _messageProducer;
 
-        public TransferCommandHandler(ApplicationDbContext context)
+        public TransferCommandHandler(ApplicationDbContext context, IMessageProducer messageProducer)
         {
             _context = context;
+            _messageProducer = messageProducer;
         }
 
         public async Task<Result> Handle(TransferCommand request, CancellationToken cancellationToken)
@@ -49,6 +53,15 @@ namespace GoldenCrown.Application.Features.Finance.Transfer
             _context.Transactions.Add(transaction);
 
             await _context.SaveChangesAsync(cancellationToken);
+            
+            await _messageProducer.SendMessageAsync(new TransactionCreatedEvent
+            {
+                SenderId = request.FromUserId, 
+                ReceiverId = toUser.Id,
+                Amount = transaction.Amount,
+                Currency =  transaction.Currency
+            }, cancellationToken);
+            
             return Result.Success();
         }
     }
