@@ -13,11 +13,16 @@ namespace GoldenCrown.Api.Validators
 
             RuleFor(x => x.Amount)
                 .GreaterThan(0).WithMessage("Сумма должна быть больше 0");
-            
+
             RuleFor(x => x.Currency)    
                 .NotEmpty()
-                .Must(currency => (new List<string>() {Currency.USD, Currency.EUR, Currency.GBP}).Contains(currency))
+                .Must(currency => Currency.AllCurrencies.Contains(currency))
                 .WithMessage("Укажите валюту");
+            
+            RuleFor(x => x.ReceiverCurrency)    
+                .NotEmpty()
+                .Must(currency => Currency.AllCurrencies.Contains(currency))
+                .WithMessage("Укажите валюту получателя");
         }
     }
 }

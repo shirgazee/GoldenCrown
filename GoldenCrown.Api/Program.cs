@@ -4,7 +4,10 @@ using GoldenCrown.Api.Dtos;
 using GoldenCrown.Api.Dtos.User;
 using GoldenCrown.Api.Middlewares;
 using GoldenCrown.Application.Features.User.UserLogin;
+using GoldenCrown.Application.Services.Currency;
 using GoldenCrown.Database;
+using GoldenCrown.Infrastructure.Clients.ExchangeClient;
+using GoldenCrown.Infrastructure.Clients.ExchangeClient.Models;
 using GoldenCrown.Infrastructure.RabbitMQ;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -30,6 +33,11 @@ namespace GoldenCrown.Api
             });
 
             builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMQ"));
+            builder.Services.Configure<ExchangeClientSettings>(builder.Configuration.GetSection("ExchangeClient"));
+            
+            builder.Services.AddHttpClient<IExchangeClient, ExchangeClient>();
+            builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+            
             builder.Services.AddSingleton<IMessageProducer, RabbiMqMessageProducer>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequest>();
