@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -74,8 +76,22 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_goldencrown_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 
 volumes:
   mssql_goldencrown_data:
   pg_goldencrown_data:
   rabbitmq_data:
+  redis_goldencrown_data:
