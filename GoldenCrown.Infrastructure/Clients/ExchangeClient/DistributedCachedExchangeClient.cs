@@ -7,15 +7,15 @@ namespace GoldenCrown.Infrastructure.Clients.ExchangeClient;
 
 public class DistributedCachedExchangeClient : IExchangeClient
 {
-    private readonly IExchangeClient _client;
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<DistributedCachedExchangeClient> _logger;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
     private static readonly DistributedCacheEntryOptions _options = new()
     {
         AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
     };
+    
+    private readonly IExchangeClient _client;
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<DistributedCachedExchangeClient> _logger;
 
     public DistributedCachedExchangeClient(IExchangeClient client, IDistributedCache cache,
         ILogger<DistributedCachedExchangeClient> logger)
@@ -44,7 +44,7 @@ public class DistributedCachedExchangeClient : IExchangeClient
         _logger.LogInformation($"Currency cache miss for {baseCurrencyCode}");
 
         ExchageRateResponse[] rates;
-        await _semaphore.WaitAsync(ct);
+        await Semaphore.WaitAsync(ct);
         try
         {
             cached = await _cache.GetStringAsync(key, ct);
@@ -60,7 +60,7 @@ public class DistributedCachedExchangeClient : IExchangeClient
         }
         finally
         {
-            _semaphore.Release();
+            Semaphore.Release();
         }
 
         return rates;
