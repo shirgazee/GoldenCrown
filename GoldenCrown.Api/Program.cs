@@ -8,11 +8,13 @@ using GoldenCrown.Application.Services.Currency;
 using GoldenCrown.Database;
 using GoldenCrown.Infrastructure.Clients.ExchangeClient;
 using GoldenCrown.Infrastructure.Clients.ExchangeClient.Models;
+using GoldenCrown.Infrastructure.Locking;
 using GoldenCrown.Infrastructure.RabbitMQ;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 
 namespace GoldenCrown.Api
 {
@@ -42,10 +44,12 @@ namespace GoldenCrown.Api
 
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<ExchangeClient>();
+            builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
             builder.Services.AddScoped<IExchangeClient, DistributedCachedExchangeClient>(sp =>
                 new DistributedCachedExchangeClient(
                     sp.GetRequiredService<ExchangeClient>(),
                     sp.GetRequiredService<IDistributedCache>(),
+                    sp.GetRequiredService<IDistributedLock>(),
                     sp.GetRequiredService<ILogger<DistributedCachedExchangeClient>>()
                 ));
 
@@ -54,9 +58,12 @@ namespace GoldenCrown.Api
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequest>();
             builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
             
+            var redisConfig = builder.Configuration["Redis:Configuration"];
+            var redis = ConnectionMultiplexer.Connect(redisConfig!);
+            builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
             builder.Services.AddStackExchangeRedisCache(o =>
             {
-                o.Configuration = builder.Configuration["Redis:Configuration"];
+                o.ConnectionMultiplexerFactory = () => Task.FromResult<IConnectionMultiplexer>(redis);
                 o.InstanceName = builder.Configuration["Redis:InstanceName"];
             });
 
