@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
+using Polly;
+using Polly.Extensions.Http;
 using StackExchange.Redis;
 
 namespace GoldenCrown.Api
@@ -42,8 +44,8 @@ namespace GoldenCrown.Api
 
             builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
-            builder.Services.AddHttpClient();
-            builder.Services.AddScoped<ExchangeClient>();
+            builder.Services.AddHttpClient<ExchangeClient>()
+                .AddPolicyHandler(GetRetryPolicy());
             builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
             builder.Services.AddScoped<IExchangeClient, DistributedCachedExchangeClient>(sp =>
                 new DistributedCachedExchangeClient(
@@ -123,6 +125,15 @@ namespace GoldenCrown.Api
             using var scope = app.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             db.Database.Migrate();
+        }
+        
+        static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .OrResult(msg => msg.StatusCode is System.Net.HttpStatusCode.UnprocessableEntity)
+                .WaitAndRetryAsync(6, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
+                    retryAttempt))); // 2 4 8 16 32 64
         }
     }
 }
