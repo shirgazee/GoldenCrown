@@ -1,8 +1,8 @@
+using System.Text.Json;
 using GoldenCrown.Application.Events;
 using GoldenCrown.Application.Services.Currency;
 using GoldenCrown.Database;
 using GoldenCrown.Domain.Models;
-using GoldenCrown.Infrastructure.RabbitMQ;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,13 +11,11 @@ namespace GoldenCrown.Application.Features.Finance.Transfer
     public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
     {
         private readonly ApplicationDbContext _context;
-        private readonly IMessageProducer _messageProducer;
         private readonly ICurrencyService _currencyService;
 
-        public TransferCommandHandler(ApplicationDbContext context, IMessageProducer messageProducer, ICurrencyService currencyService)
+        public TransferCommandHandler(ApplicationDbContext context, ICurrencyService currencyService)
         {
             _context = context;
-            _messageProducer = messageProducer;
             _currencyService = currencyService;
         }
 
@@ -47,26 +45,34 @@ namespace GoldenCrown.Application.Features.Finance.Transfer
             fromAccount.Balance -= request.Amount;
             var targetAmount = await _currencyService.Convert(request.Amount, fromAccount.Currency, toAccount.Currency, cancellationToken);
             toAccount!.Balance += targetAmount;
-
+            var now = DateTime.UtcNow;
+            
             var transaction = new Transaction
             {
                 ReceiverAccountId = toAccount.Id,
                 SenderAccountId = fromAccount.Id,
                 Amount = request.Amount,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = now,
                 Currency =  request.Currency
             };
             _context.Transactions.Add(transaction);
 
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            await _messageProducer.SendMessageAsync(new TransactionCreatedEvent
+            _context.OutboxMessages.Add(new OutboxMessage
             {
-                SenderId = request.FromUserId, 
-                ReceiverId = toUser.Id,
-                Amount = transaction.Amount,
-                Currency =  transaction.Currency
-            }, cancellationToken);
+                Id = Guid.NewGuid(),
+                Type = nameof(TransactionCreatedEvent),
+                Payload = JsonSerializer.Serialize(new TransactionCreatedEvent
+                {
+                    SenderId = request.FromUserId, 
+                    ReceiverId = toUser.Id,
+                    Amount = transaction.Amount,
+                    Currency =  transaction.Currency
+                }),
+                CreatedAt = now,
+                Attempts = 0
+            });
+            
+            await _context.SaveChangesAsync(cancellationToken);
             
             return Result.Success();
         }

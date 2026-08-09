@@ -10,6 +10,7 @@ namespace GoldenCrown.Database
         public DbSet<User> Users { get; set; }
         public DbSet<Session> Sessions { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -107,6 +108,33 @@ namespace GoldenCrown.Database
                 .WithMany()
                 .HasForeignKey(x => x.ReceiverAccountId)
                 .OnDelete(DeleteBehavior.NoAction);
+            
+            var outboxEntity = modelBuilder.Entity<OutboxMessage>()
+                .ToTable("outbox_messages");
+            outboxEntity.HasKey(x => x.Id);
+            outboxEntity.Property(x => x.Id)
+                .HasColumnName("id")
+                .IsRequired();
+            outboxEntity.Property(x => x.Type)
+                .HasColumnName("type")
+                .IsRequired();
+            outboxEntity.Property(x => x.Payload)
+                .HasColumnName("payload")
+                .IsRequired();
+            outboxEntity.Property(x => x.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+            outboxEntity.Property(x => x.SentAt)
+                .HasColumnName("sent_at");
+            outboxEntity.Property(x => x.Attempts)
+                .HasColumnName("attempts")
+                .IsRequired();
+            outboxEntity.Property(x => x.Error)
+                .HasColumnName("error");
+            
+            outboxEntity.HasIndex(x => x.CreatedAt)
+                .HasFilter("\"sent_at\" IS NULL")
+                .HasDatabaseName("ix_outbox_messages_pending");
         }
 
         private void SeedUserData(EntityTypeBuilder<User> userEntity)

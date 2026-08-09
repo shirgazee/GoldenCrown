@@ -2,5 +2,5 @@ namespace GoldenCrown.Infrastructure.RabbitMQ;
 
 public interface IMessageProducer
 {
-    Task SendMessageAsync<T> (T message, CancellationToken token = default);
+    Task SendMessageAsync(Guid messageId, string type, string payload, CancellationToken token = default);
 }

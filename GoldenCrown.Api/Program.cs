@@ -70,6 +70,7 @@ namespace GoldenCrown.Api
             });
 
             builder.Services.AddHostedService<SessionCleanupService>();
+            builder.Services.AddHostedService<OutboxService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenApi at https://aka.ms/aspnetcore/swashbuckle

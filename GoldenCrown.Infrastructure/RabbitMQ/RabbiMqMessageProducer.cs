@@ -14,7 +14,7 @@ public class RabbiMqMessageProducer : IMessageProducer
         _settings = settings.Value;
     }
     
-    public async Task SendMessageAsync<T>(T message, CancellationToken token = default)
+    public async Task SendMessageAsync(Guid messageId, string type, string payload, CancellationToken token = default)
     {
         var factory = new ConnectionFactory()
         {
@@ -23,17 +23,28 @@ public class RabbiMqMessageProducer : IMessageProducer
             Password = _settings.Password,
         };
 
+        // todo создавать channel и connection один раз и переиспользовать их, а не создавать каждый раз заново
         await using var connection = await factory.CreateConnectionAsync(token);
-        await using var channel = await connection.CreateChannelAsync(cancellationToken: token);
+        await using var channel = await connection.CreateChannelAsync(
+            new CreateChannelOptions(publisherConfirmationsEnabled: true, publisherConfirmationTrackingEnabled: true),
+            cancellationToken: token);
 
-        var name = typeof(T).Name;
+        var name = type;
         await channel.ExchangeDeclareAsync(name, ExchangeType.Direct, cancellationToken: token);
         await channel.QueueDeclareAsync(name, durable: true, exclusive: false, autoDelete: false, cancellationToken: token);
         await channel.QueueBindAsync(name, name, routingKey: "", cancellationToken: token);
+
+        var props = new BasicProperties
+        {
+            MessageId =  messageId.ToString(),
+            ContentType = "application/json",
+            Type = type,
+            DeliveryMode = DeliveryModes.Persistent 
+        };
         
-        var json = JsonSerializer.Serialize(message);
+        var json = payload;
         var body = Encoding.UTF8.GetBytes(json);
         
-        await channel.BasicPublishAsync(name, "", body: body, cancellationToken: token);
+        await channel.BasicPublishAsync(type, name, mandatory: false, basicProperties: props, body: body, cancellationToken: token);
     }
 }
