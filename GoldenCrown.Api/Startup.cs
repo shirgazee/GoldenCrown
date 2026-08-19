@@ -37,8 +37,8 @@ public class Startup
             .AddHostedService<SessionCleanupService>()
             .AddHostedService<OutboxService>()
             .AddControllers();
-            
-            services.AddEndpointsApiExplorer()
+
+        services.AddEndpointsApiExplorer()
             .AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("ApiKey",
